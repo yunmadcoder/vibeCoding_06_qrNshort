@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="스마트 링크 플랫폼 - 고화질 QR 코드 생성 및 간편한 OpenAPI URL 단축 올인원 웹앱">
+  <meta name="keywords" content="QR코드, URL단축, 링크단축, QR코드생성, Link Studio">
+  <title>Link & QR Studio | 스마트 링크 올인원 플랫폼</title>
+
+  <!-- Pretendard Font -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+
+  <!-- Root Stylesheet -->
+  <link rel="stylesheet" href="urlShort/css/style.css">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="url2qr/img/logo.png">
+
+  <style>
+    /* Portal Specific Styling */
+    .portal-hero {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .portal-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.75rem;
+      width: 100%;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .portal-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 2rem;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      text-decoration: none;
+      color: var(--text-main);
+      overflow: hidden;
+      transition: all 0.35s var(--ease-spring);
+    }
+
+    .portal-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent-gradient);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 0;
+      pointer-events: none;
+      mask-image: linear-gradient(to bottom, transparent 60%, black 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 60%, black 100%);
+    }
+
+    .portal-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--border-focus);
+      box-shadow: var(--shadow-glow), var(--shadow-lg);
+    }
+
+    .portal-card:hover::before {
+      opacity: 0.08;
+    }
+
+    .card-icon-slot {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-md);
+      background: var(--bg-glass-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-primary);
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.3s var(--ease-spring);
+    }
+
+    .portal-card:hover .card-icon-slot {
+      transform: scale(1.1) rotate(-3deg);
+      border-color: var(--accent-primary);
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 1.75rem;
+      right: 1.75rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid var(--border-subtle);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      z-index: 1;
+    }
+
+    .card-title {
+      position: relative;
+      z-index: 1;
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    .card-description {
+      position: relative;
+      z-index: 1;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+      flex: 1;
+    }
+
+    .card-footer-action {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--accent-primary);
+    }
+
+    .card-footer-action svg {
+      transition: transform 0.25s var(--ease-spring);
+    }
+
+    .portal-card:hover .card-footer-action svg {
+      transform: translateX(6px);
+    }
+
+    .portal-features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .portal-feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.84rem;
+      color: var(--text-dim);
+    }
+
+    .portal-feature-item svg {
+      color: var(--success);
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Glow & Grid Effects -->
+  <div class="bg-effects" aria-hidden="true">
+    <div class="mouse-glow-canvas" id="mouseGlowCanvas"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+    <div class="bg-grid"></div>
+  </div>
+
+  <div class="app-layout">
+    <!-- Header: 좌측 로고, 중앙 'QR코드' & 'URL단축' 버튼 (요구사항 1, 2, 3), 우측 테마 전환 -->
+    <header class="app-header">
+      <div class="header-left">
+        <a href="index.html" class="brand-logo-wrap" title="Link Studio 홈">
+          <img src="url2qr/img/logo.png" alt="Link Studio 로고" class="brand-logo">
+          <div class="brand-title-wrap">
+            <span class="brand-name">Link Studio</span>
+            <span class="brand-sub">Smart URL & QR Platform</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- 요구사항 1, 2, 3: 'QR코드' 버튼과 'URL단축' 버튼 -->
+      <nav class="nav-service-tabs" aria-label="메인 서비스 바로가기">
+        <a href="url2qr/index.html" class="nav-tab" id="tabQrCode" title="QR 코드 생성기 (url2qr)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="5" height="5" x="3" y="3" rx="1"></rect>
+            <rect width="5" height="5" x="16" y="3" rx="1"></rect>
+            <rect width="5" height="5" x="3" y="16" rx="1"></rect>
+            <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+            <path d="M21 21v.01"></path>
+            <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+            <path d="M3 12h.01"></path>
+            <path d="M12 3h.01"></path>
+            <path d="M12 16v.01"></path>
+            <path d="M16 12h1"></path>
+            <path d="M21 12v.01"></path>
+            <path d="M12 21v-1"></path>
+          </svg>
+          <span>QR코드</span>
+        </a>
+        <a href="urlShort/index.html" class="nav-tab" id="tabUrlShort" title="URL 단축기 (urlShort)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+          <span>URL단축</span>
+        </a>
+      </nav>
+
+      <div class="header-right">
+        <!-- 테마 전환 버튼 -->
+        <button type="button" class="icon-btn theme-toggle" id="themeToggleBtn" aria-label="테마 전환" title="다크/라이트 모드 전환">
+          <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+          <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Portal Stage -->
+    <main class="main-stage">
+      <section class="portal-hero">
+        <div class="badge-pill">
+          <span class="badge-dot"></span>
+          <span>Unified Link & QR Workspace</span>
+        </div>
+        <h1 class="main-title">필요한 링크 도구를<br><span class="gradient-text">한곳에서 자유롭게</span></h1>
+        <p class="subtitle">고해상도 QR 코드 생성과 신속한 OpenAPI URL 단축 기능을 제공하는 올인원 웹 서비스입니다.</p>
+      </section>
+
+      <!-- 2개 핵심 서비스 카드 그리드 -->
+      <section class="portal-cards-grid">
+        <!-- 카드 1: QR 코드 생성기 (url2qr) -->
+        <a href="url2qr/index.html" class="portal-card" id="cardUrl2Qr">
+          <div class="card-badge">QR Studio</div>
+          <div class="card-icon-slot">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="5" height="5" x="3" y="3" rx="1"></rect>
+              <rect width="5" height="5" x="16" y="3" rx="1"></rect>
+              <rect width="5" height="5" x="3" y="16" rx="1"></rect>
+              <path d="M21 16h-3a2 2 0 0 0-2 2v3"></path>
+              <path d="M21 21v.01"></path>
+              <path d="M12 7v3a2 2 0 0 1-2 2H7"></path>
+              <path d="M3 12h.01"></path>
+              <path d="M12 3h.01"></path>
+              <path d="M12 16v.01"></path>
+              <path d="M16 12h1"></path>
+              <path d="M21 12v.01"></path>
+              <path d="M12 21v-1"></path>
+            </svg>
+          </div>
+          <h2 class="card-title">QR 코드 생성기</h2>
+          <p class="card-description">웹사이트 URL을 입력하면 부드러운 모핑 애니메이션과 함께 고품질 QR 코드를 생성하고, 클릭 한 번으로 1000×1000px 고화질 JPG로 저장합니다.</p>
+          
+          <div class="portal-features-list">
+            <div class="portal-feature-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>1000×1000px 고화질 JPG 원클릭 다운로드</span>
+            </div>
+            <div class="portal-feature-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>다이내믹 모핑 레이아웃 & 클립보드 붙여넣기</span>
+            </div>
+          </div>
+
+          <div class="card-footer-action">
+            <span>QR 코드 생성 바로가기</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </div>
+        </a>
+
+        <!-- 카드 2: URL 단축기 (urlShort) -->
+        <a href="urlShort/index.html" class="portal-card" id="cardUrlShort">
+          <div class="card-badge">Link Shortener</div>
+          <div class="card-icon-slot">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </div>
+          <h2 class="card-title">URL 단축기</h2>
+          <p class="card-description">길고 복잡한 주소를 신속하게 단축합니다. 실시간 입력 유효성 검사, OpenAPI 다중 Fallback 요청, 원클릭 복사 및 QR 코드 변환을 지원합니다.</p>
+          
+          <div class="portal-features-list">
+            <div class="portal-feature-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>입력 감지 실시간 버튼 활성화/비활성화</span>
+            </div>
+            <div class="portal-feature-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span>원클릭 클립보드 복사 & '복사하였습니다' 알림창</span>
+            </div>
+          </div>
+
+          <div class="card-footer-action">
+            <span>URL 단축 바로가기</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </div>
+        </a>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Theme toggle & Cursor tracking for Portal page
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+    const savedTheme = localStorage.getItem("qr_theme_v2") || "light";
+    document.documentElement.setAttribute("data-theme", savedTheme);
+
+    themeToggleBtn.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      const nextTheme = currentTheme === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", nextTheme);
+      localStorage.setItem("qr_theme_v2", nextTheme);
+    });
+
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight * 0.4;
+    let targetX = mouseX;
+    let targetY = mouseY;
+
+    function renderCursor() {
+      mouseX += (targetX - mouseX) * 0.08;
+      mouseY += (targetY - mouseY) * 0.08;
+      const root = document.documentElement;
+      const ratioX = mouseX / window.innerWidth;
+      const ratioY = mouseY / window.innerHeight;
+      root.style.setProperty("--cursor-x", `${(ratioX * 100).toFixed(1)}%`);
+      root.style.setProperty("--cursor-y", `${(ratioY * 100).toFixed(1)}%`);
+      root.style.setProperty("--cursor-hue-1", `${(30 + ratioX * 24).toFixed(1)}deg`);
+      root.style.setProperty("--cursor-hue-2", `${(16 + ratioY * 20).toFixed(1)}deg`);
+      requestAnimationFrame(renderCursor);
+    }
+    window.addEventListener("pointermove", (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+    });
+    renderCursor();
+  </script>
+</body>
+</html>
