@@ -813,12 +813,16 @@ html, body {
   justify-content: center;
 }
 
-.qrcode-canvas-wrap canvas,
-.qrcode-canvas-wrap img {
+/* QRCode.js renders the same code into both a canvas and an img; show only the canvas */
+.qrcode-canvas-wrap canvas {
   display: block !important;
   width: 256px !important;
   height: 256px !important;
   border-radius: 4px;
+}
+
+.qrcode-canvas-wrap img {
+  display: none !important;
 }
 
 /* Hover Overlay for QR Download */
@@ -1174,8 +1178,7 @@ html, body {
     height: 220px;
   }
 
-  .qrcode-canvas-wrap canvas,
-  .qrcode-canvas-wrap img {
+  .qrcode-canvas-wrap canvas {
     width: 220px !important;
     height: 220px !important;
   }
